@@ -17,6 +17,17 @@ Run:
     python3 crapi_seed_users_cars_forums.py --config other.yaml
 
 Dependencies:  pip install requests pyyaml
+
+Fixes vs. the original (intermittent "vehicle not added"):
+  1. add_vehicle now RETRIES with backoff instead of giving up after one
+     pass. The real cause wasn't a slow program -- it was a readiness race:
+     right after signup crAPI's identity/vehicle service often isn't ready,
+     so the single immediate attempt failed. Retrying clears it.
+  2. get_vin_and_pin now uses the NEWEST matching email (sorted by MailHog's
+     Created timestamp) instead of the first one it happens to see, so a
+     stale VIN left in MailHog from a previous run can't poison the add.
+  3. Idempotent: an "already added" response is treated as success, and
+     request timeouts were added everywhere so a hung call can't stall a run.
 """
 
 import argparse
@@ -27,6 +38,14 @@ import time
 import quopri
 
 import requests
+
+
+# ── Tunables ──────────────────────────────────────────────────────────────────
+HTTP_TIMEOUT       = 10     # per-request timeout (seconds)
+VEHICLE_RETRIES    = 6      # how many times to retry add_vehicle
+VEHICLE_DELAY      = 5      # seconds between add_vehicle retries
+POST_RETRIES       = 3      # how many times to retry create_post
+POST_DELAY         = 4      # seconds between create_post retries
 
 
 # ── Config loading ────────────────────────────────────────────────────────────
@@ -84,20 +103,32 @@ def decode_body(raw_data):
 
 
 def register(user):
-    r = requests.post(
-        f"{CRAPI_BASE}/identity/api/auth/signup",
-        json={
-            "name":     user["name"],
-            "email":    user["email"],
-            "number":   user["phone"],
-            "password": PASSWORD,
-        },
-    )
+    try:
+        r = requests.post(
+            f"{CRAPI_BASE}/identity/api/auth/signup",
+            json={
+                "name":     user["name"],
+                "email":    user["email"],
+                "number":   user["phone"],
+                "password": PASSWORD,
+            },
+            timeout=HTTP_TIMEOUT,
+        )
+    except requests.RequestException as e:
+        print(f"  Register → request error: {e}")
+        return False
     print(f"  Register → {r.status_code}: {r.text.strip()}")
     return r.status_code in (200, 201)
 
 
 def get_vin_and_pin(email, retries=15, delay=4):
+    """Poll MailHog for the FRESHEST VIN/PIN email addressed to `email`.
+
+    Previously this returned the first matching email it found. If MailHog
+    still held an email from an earlier run (e.g. crAPI's DB was reset but
+    MailHog wasn't cleared), that stale VIN could be picked and the later
+    add_vehicle would fail. Sorting newest-first avoids that.
+    """
     for attempt in range(1, retries + 1):
         print(f"  MailHog attempt {attempt}/{retries}...")
         try:
@@ -108,6 +139,8 @@ def get_vin_and_pin(email, retries=15, delay=4):
             time.sleep(delay)
             continue
 
+        # Collect every message addressed to this user...
+        matches = []
         for msg in (r.json() or []):
             if not isinstance(msg, dict):
                 continue
@@ -115,8 +148,14 @@ def get_vin_and_pin(email, retries=15, delay=4):
             to_raw  = " ".join(raw.get("To") or [])
             content = msg.get("Content") or {}
             to_hdr  = " ".join((content.get("Headers") or {}).get("To") or [])
-            if email.lower() not in (to_raw + " " + to_hdr).lower():
-                continue
+            if email.lower() in (to_raw + " " + to_hdr).lower():
+                matches.append(msg)
+
+        # ...and look at the newest first so we use the freshest VIN/PIN.
+        matches.sort(key=lambda m: m.get("Created") or "", reverse=True)
+
+        for msg in matches:
+            raw   = msg.get("Raw") or {}
             plain = decode_body(raw.get("Data") or "")
             vin_match = re.search(r"VIN:\s*([A-HJ-NPR-Z0-9]{17})", plain, re.IGNORECASE)
             pin_match = re.search(r"Pincode:\s*(\d+)", plain, re.IGNORECASE)
@@ -125,62 +164,129 @@ def get_vin_and_pin(email, retries=15, delay=4):
                 pin = pin_match.group(1)
                 print(f"  ✅ VIN: {vin}  PIN: {pin}")
                 return vin, pin
-            print(f"  Found email but could not parse VIN/PIN: {plain[:200]}")
 
-        print(f"  Email not found yet — waiting {delay}s...")
+        if matches:
+            newest = decode_body((matches[0].get("Raw") or {}).get("Data") or "")
+            print(f"  Found {len(matches)} email(s) but no VIN/PIN yet: {newest[:160]}")
+        print(f"  Email not ready yet — waiting {delay}s...")
         time.sleep(delay)
 
     print(f"  ❌ Could not find VIN/PIN for {email}")
     return None, None
 
 
-def login(email):
-    r = requests.post(
-        f"{CRAPI_BASE}/identity/api/auth/login",
-        json={"email": email, "password": PASSWORD},
-    )
-    print(f"  Login → {r.status_code}")
-    if r.status_code != 200:
-        print(f"  ❌ Login failed: {r.text}")
-        return None
-    token = r.json().get("token")
-    if not token:
-        print("  ❌ No token in response")
-        return None
-    return token
+def login(email, retries=4, delay=3):
+    """Log in, retrying briefly in case the user record isn't committed yet."""
+    for attempt in range(1, retries + 1):
+        try:
+            r = requests.post(
+                f"{CRAPI_BASE}/identity/api/auth/login",
+                json={"email": email, "password": PASSWORD},
+                timeout=HTTP_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            print(f"  Login attempt {attempt}/{retries} → request error: {e}")
+            time.sleep(delay)
+            continue
+
+        print(f"  Login attempt {attempt}/{retries} → {r.status_code}")
+        if r.status_code == 200:
+            token = r.json().get("token")
+            if token:
+                return token
+            print("  ❌ No token in response")
+        else:
+            print(f"  Login not ready: {r.text.strip()[:160]}")
+
+        if attempt < retries:
+            time.sleep(delay)
+
+    print("  ❌ Login failed after retries")
+    return None
 
 
-def add_vehicle(token, vin, pin):
+def add_vehicle(token, vin, pin, retries=VEHICLE_RETRIES, delay=VEHICLE_DELAY):
+    """Add the vehicle, retrying with backoff.
+
+    This is the main fix. crAPI's vehicle/identity service is frequently not
+    ready in the moment right after signup, so the original single immediate
+    pass (string pin, then int pin, then give up) failed intermittently.
+    We now retry the whole thing a few times with a delay between rounds.
+    """
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    for pin_val in [pin, int(pin)]:
-        r = requests.post(
-            f"{CRAPI_BASE}/identity/api/v2/vehicle/add_vehicle",
-            json={"vin": vin, "pincode": pin_val},
-            headers=headers, timeout=10,
-        )
-        print(f"  Add vehicle → {r.status_code}: {r.text.strip()}")
-        if r.status_code in (200, 201):
-            print("  ✅ Vehicle added!")
-            return True
-    print("  ❌ Failed to add vehicle")
+
+    # crAPI has historically accepted the pincode as either a string or an int,
+    # so try both forms within each round.
+    pin_variants = [pin]
+    try:
+        pin_variants.append(int(pin))
+    except (TypeError, ValueError):
+        pass
+
+    last = "no response"
+    for attempt in range(1, retries + 1):
+        for pin_val in pin_variants:
+            try:
+                r = requests.post(
+                    f"{CRAPI_BASE}/identity/api/v2/vehicle/add_vehicle",
+                    json={"vin": vin, "pincode": pin_val},
+                    headers=headers, timeout=HTTP_TIMEOUT,
+                )
+            except requests.RequestException as e:
+                last = f"request error: {e}"
+                continue
+
+            body = r.text.strip()
+            if r.status_code in (200, 201):
+                print(f"  Add vehicle → {r.status_code}: {body}")
+                print("  ✅ Vehicle added!")
+                return True
+            # Re-running against an already-seeded DB shouldn't count as a fail.
+            if "already" in body.lower():
+                print(f"  Add vehicle → {r.status_code}: {body}")
+                print("  ✅ Vehicle already present — treating as success.")
+                return True
+            last = f"{r.status_code}: {body[:160]}"
+
+        print(f"  Add vehicle attempt {attempt}/{retries} → {last}")
+        if attempt < retries:
+            time.sleep(delay)
+
+    print(f"  ❌ Failed to add vehicle after {retries} attempts ({last})")
     return False
 
 
-def create_post(token, name):
+def create_post(token, name, retries=POST_RETRIES, delay=POST_DELAY):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     payload = {
         "title":   f"Sample Post from {name}",
         "content": f"Sample post from {name}",
     }
-    r = requests.post(
-        f"{CRAPI_BASE}/community/api/v2/community/posts",
-        json=payload, headers=headers, timeout=10,
-    )
-    print(f"  Create post → {r.status_code}: {r.text.strip()}")
-    if r.status_code in (200, 201):
-        print("  ✅ Post created!")
-        return True
-    print("  ❌ Failed to create post")
+    last = "no response"
+    for attempt in range(1, retries + 1):
+        try:
+            r = requests.post(
+                f"{CRAPI_BASE}/community/api/v2/community/posts",
+                json=payload, headers=headers, timeout=HTTP_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            last = f"request error: {e}"
+            print(f"  Create post attempt {attempt}/{retries} → {last}")
+            if attempt < retries:
+                time.sleep(delay)
+            continue
+
+        body = r.text.strip()
+        if r.status_code in (200, 201):
+            print(f"  Create post → {r.status_code}: {body}")
+            print("  ✅ Post created!")
+            return True
+        last = f"{r.status_code}: {body[:160]}"
+        print(f"  Create post attempt {attempt}/{retries} → {last}")
+        if attempt < retries:
+            time.sleep(delay)
+
+    print(f"  ❌ Failed to create post after {retries} attempts ({last})")
     return False
 
 
