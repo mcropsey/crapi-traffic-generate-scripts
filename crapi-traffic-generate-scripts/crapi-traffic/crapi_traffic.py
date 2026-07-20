@@ -307,7 +307,9 @@ def f_tech_info_exposure(s):
 
 
 def f_excessive_single_user(s, intensity):
-    target = KNOWN_USERS[0]
+    # Deliberately a NON-seeded account so the brute force can't lock out one of
+    # the real known users (which would then fail to obtain a token next run).
+    target = BRUTE_TARGET
     for i in range(40 * intensity):
         r = login(s, target, f"wrong{i}", consumer_headers(909))
         bump("excessive_single", r.status_code)
@@ -373,7 +375,7 @@ def main():
     args = ap.parse_args()
     cfg = load_config(args.config)
 
-    global BASE, TIMEOUT, KNOWN_USERS, KNOWN_PASSWORD
+    global BASE, TIMEOUT, KNOWN_USERS, KNOWN_PASSWORD, BRUTE_TARGET
     target = cfg.get("target", {}) or {}
     BASE = str(target.get("base_url", "http://192.168.1.101:8888")).rstrip("/")
 
@@ -395,6 +397,9 @@ def main():
     fc = cfg.get("findings", {}) or {}
     auth_rounds = int(fc.get("auth_rounds", 3))
     intensity = int(fc.get("intensity", 1))
+    # Sacrificial account for the single-user brute-force pattern. Keep this OUT
+    # of known_users.emails so the lockout it triggers never affects real users.
+    BRUTE_TARGET = str(fc.get("brute_target", "locked-target@my.lab"))
 
     if not (do_warmup or do_findings):
         sys.exit("Nothing to do: set run.warmup and/or run.findings to true in the config.")

@@ -96,6 +96,13 @@ findings:
   #   Lower  -> fewer attempts (may fall under the detection threshold).
   intensity: 1
 
+  # Sacrificial account for the single-user brute-force pattern. This account
+  # gets sprayed with ~40 wrong passwords each run and will be locked/throttled
+  # by crAPI, so it MUST NOT be one of known_users.emails — otherwise that real
+  # user fails to obtain a token on the next run (the 8/9 problem).
+  #   Keep it a plausible-but-unseeded address.
+  brute_target: "locked-target@my.lab"
+
 
 # ── http ────────────────────────────────────────────────────────────────────
 http:
