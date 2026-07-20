@@ -1,7 +1,0 @@
-# crapi_traffic.py runtime dependencies
-requests>=2.31.0
-PyYAML>=6.0
-
-# Optional: silences the LibreSSL "NotOpenSSLWarning" on macOS system Python.
-# Uncomment if you want it gone (otherwise the warning is harmless).
-# urllib3<2
