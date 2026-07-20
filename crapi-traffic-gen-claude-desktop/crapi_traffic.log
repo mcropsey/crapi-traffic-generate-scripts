@@ -1,0 +1,151 @@
+2026-07-20 14:53:10,158 INFO    Starting crAPI traffic generator in 'loop' mode against https://crapi.cropseyit.com
+2026-07-20 14:53:10,158 INFO    ========== SWEEP #1 START ==========
+2026-07-20 14:53:30,454 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/signup
+2026-07-20 14:53:51,522 WARNING Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/signup
+2026-07-20 14:54:11,585 WARNING signup                                   -> EXC HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Max retries exceeded with url: /identity/api/auth/signup (Caused by ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)"))
+2026-07-20 14:54:31,679 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/v2.7/user/login-with-token
+2026-07-20 14:54:52,751 WARNING Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/v2.7/user/login-with-token
+2026-07-20 14:55:12,826 WARNING login-with-token v2.7                    -> EXC HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Max retries exceeded with url: /identity/api/auth/v2.7/user/login-with-token (Caused by ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)"))
+2026-07-20 14:55:32,982 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/v4.0/user/login-with-token
+2026-07-20 14:55:54,051 WARNING Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/v4.0/user/login-with-token
+2026-07-20 14:56:14,109 WARNING login-with-token v4.0                    -> EXC HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Max retries exceeded with url: /identity/api/auth/v4.0/user/login-with-token (Caused by ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)"))
+2026-07-20 14:56:34,178 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/signup
+2026-07-20 14:56:55,290 WARNING Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)")': /identity/api/auth/signup
+2026-07-20 14:57:15,369 WARNING signup                                   -> EXC HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Max retries exceeded with url: /identity/api/auth/signup (Caused by ReadTimeoutError("HTTPSConnectionPool(host='crapi.cropseyit.com', port=443): Read timed out. (read timeout=20)"))
+2026-07-20 15:11:49,415 INFO    Starting crAPI traffic generator in 'loop' mode against https://crapi.cropseyit.com
+2026-07-20 15:11:49,415 INFO    ========== SWEEP #1 START ==========
+2026-07-20 15:11:49,681 INFO    signup                                   -> 200
+2026-07-20 15:11:49,724 WARNING login-with-token v2.7                    -> 400
+2026-07-20 15:11:49,762 WARNING login-with-token v4.0                    -> 400
+2026-07-20 15:11:49,872 INFO    signup                                   -> 200
+2026-07-20 15:11:49,913 WARNING login-with-token v2.7                    -> 400
+2026-07-20 15:11:49,953 WARNING login-with-token v4.0                    -> 400
+2026-07-20 15:11:50,060 INFO    signup                                   -> 200
+2026-07-20 15:11:50,102 WARNING login-with-token v2.7                    -> 400
+2026-07-20 15:11:50,229 WARNING login-with-token v4.0                    -> 400
+2026-07-20 15:11:50,335 INFO    login                                    -> 200
+2026-07-20 15:11:50,383 INFO    dashboard                                -> 200
+2026-07-20 15:11:50,441 INFO    upload profile pic                       -> 200
+2026-07-20 15:11:50,511 INFO    upload video                             -> 200
+2026-07-20 15:11:50,552 INFO    get video                                -> 200
+2026-07-20 15:11:50,604 INFO    rename video                             -> 200
+2026-07-20 15:11:50,719 WARNING convert video                            -> 403
+2026-07-20 15:11:50,773 INFO    admin delete video                       -> 200
+2026-07-20 15:11:50,818 WARNING delete video                             -> 404
+2026-07-20 15:11:50,873 INFO    vehicle resend_email                     -> 200
+2026-07-20 15:12:27,749 WARNING add_vehicle (fallback)                   -> 403
+2026-07-20 15:12:27,796 INFO    get vehicles                             -> 200
+2026-07-20 15:12:27,848 INFO    create post                              -> 200
+2026-07-20 15:12:27,946 INFO    create post                              -> 200
+2026-07-20 15:12:28,006 INFO    recent posts                             -> 200
+2026-07-20 15:12:28,060 INFO    get post                                 -> 200
+2026-07-20 15:12:28,114 INFO    post comment                             -> 200
+2026-07-20 15:12:28,164 INFO    get post                                 -> 200
+2026-07-20 15:12:28,218 INFO    post comment                             -> 200
+2026-07-20 15:12:28,270 WARNING new coupon (community)                   -> 400
+2026-07-20 15:12:28,362 WARNING validate coupon                          -> 500
+2026-07-20 15:12:28,478 INFO    get products                             -> 200
+2026-07-20 15:12:28,584 INFO    add product                              -> 200
+2026-07-20 15:12:28,669 INFO    create order                             -> 200
+2026-07-20 15:12:28,752 INFO    create order                             -> 200
+2026-07-20 15:12:28,834 INFO    get all orders                           -> 200
+2026-07-20 15:12:28,899 INFO    get order                                -> 200
+2026-07-20 15:12:29,070 INFO    update order                             -> 200
+2026-07-20 15:12:29,152 INFO    return order                             -> 200
+2026-07-20 15:12:29,216 INFO    get order                                -> 200
+2026-07-20 15:12:29,302 INFO    update order                             -> 200
+2026-07-20 15:12:29,381 INFO    return order                             -> 200
+2026-07-20 15:12:29,523 INFO    return qr code                           -> 200
+2026-07-20 15:12:29,684 WARNING apply coupon (shop)                      -> 400
+2026-07-20 15:12:29,739 INFO    change-email                             -> 200
+2026-07-20 15:13:06,744 INFO    reset-password (authed)                  -> 200
+2026-07-20 15:13:06,870 INFO    login                                    -> 200
+2026-07-20 15:13:06,913 INFO    dashboard                                -> 200
+2026-07-20 15:13:06,962 INFO    upload profile pic                       -> 200
+2026-07-20 15:13:07,010 INFO    upload video                             -> 200
+2026-07-20 15:13:07,055 INFO    get video                                -> 200
+2026-07-20 15:13:07,107 INFO    rename video                             -> 200
+2026-07-20 15:13:07,152 WARNING convert video                            -> 403
+2026-07-20 15:13:07,267 INFO    admin delete video                       -> 200
+2026-07-20 15:13:07,312 WARNING delete video                             -> 404
+2026-07-20 15:13:07,368 INFO    vehicle resend_email                     -> 200
+2026-07-20 15:13:44,203 WARNING add_vehicle (fallback)                   -> 403
+2026-07-20 15:13:44,248 INFO    get vehicles                             -> 200
+2026-07-20 15:13:44,298 INFO    create post                              -> 200
+2026-07-20 15:13:44,348 INFO    create post                              -> 200
+2026-07-20 15:13:44,493 INFO    recent posts                             -> 200
+2026-07-20 15:13:44,543 INFO    get post                                 -> 200
+2026-07-20 15:13:44,595 INFO    post comment                             -> 200
+2026-07-20 15:13:44,644 INFO    get post                                 -> 200
+2026-07-20 15:13:44,696 INFO    post comment                             -> 200
+2026-07-20 15:13:44,747 WARNING new coupon (community)                   -> 400
+2026-07-20 15:13:44,797 WARNING validate coupon                          -> 500
+2026-07-20 15:13:44,873 INFO    get products                             -> 200
+2026-07-20 15:13:45,018 INFO    add product                              -> 200
+2026-07-20 15:13:45,115 INFO    create order                             -> 200
+2026-07-20 15:13:45,201 INFO    create order                             -> 200
+2026-07-20 15:13:45,280 INFO    get all orders                           -> 200
+2026-07-20 15:13:45,346 INFO    get order                                -> 200
+2026-07-20 15:13:45,430 INFO    update order                             -> 200
+2026-07-20 15:13:45,540 INFO    return order                             -> 200
+2026-07-20 15:13:45,606 INFO    get order                                -> 200
+2026-07-20 15:13:45,700 INFO    update order                             -> 200
+2026-07-20 15:13:45,781 INFO    return order                             -> 200
+2026-07-20 15:13:45,831 INFO    return qr code                           -> 200
+2026-07-20 15:13:46,195 WARNING apply coupon (shop)                      -> 400
+2026-07-20 15:13:46,250 INFO    change-email                             -> 200
+2026-07-20 15:14:23,053 INFO    reset-password (authed)                  -> 200
+2026-07-20 15:14:23,159 INFO    login                                    -> 200
+2026-07-20 15:14:23,291 INFO    dashboard                                -> 200
+2026-07-20 15:14:23,376 INFO    upload profile pic                       -> 200
+2026-07-20 15:14:23,429 INFO    upload video                             -> 200
+2026-07-20 15:14:23,482 INFO    get video                                -> 200
+2026-07-20 15:14:23,533 INFO    rename video                             -> 200
+2026-07-20 15:14:23,581 WARNING convert video                            -> 403
+2026-07-20 15:14:23,633 INFO    admin delete video                       -> 200
+2026-07-20 15:14:23,675 WARNING delete video                             -> 404
+2026-07-20 15:14:23,815 INFO    vehicle resend_email                     -> 200
+2026-07-20 15:15:00,689 WARNING add_vehicle (fallback)                   -> 403
+2026-07-20 15:15:00,735 INFO    get vehicles                             -> 200
+2026-07-20 15:15:00,787 INFO    create post                              -> 200
+2026-07-20 15:15:00,840 INFO    create post                              -> 200
+2026-07-20 15:15:00,899 INFO    recent posts                             -> 200
+2026-07-20 15:15:01,036 INFO    get post                                 -> 200
+2026-07-20 15:15:01,087 INFO    post comment                             -> 200
+2026-07-20 15:15:01,135 INFO    get post                                 -> 200
+2026-07-20 15:15:01,185 INFO    post comment                             -> 200
+2026-07-20 15:15:01,235 WARNING new coupon (community)                   -> 400
+2026-07-20 15:15:01,285 WARNING validate coupon                          -> 500
+2026-07-20 15:15:01,365 INFO    get products                             -> 200
+2026-07-20 15:15:01,455 INFO    add product                              -> 200
+2026-07-20 15:15:01,563 INFO    create order                             -> 200
+2026-07-20 15:15:01,642 WARNING create order                             -> 400
+2026-07-20 15:15:01,718 INFO    get all orders                           -> 200
+2026-07-20 15:15:01,786 INFO    get order                                -> 200
+2026-07-20 15:15:01,868 INFO    update order                             -> 200
+2026-07-20 15:15:01,948 INFO    return order                             -> 200
+2026-07-20 15:15:01,994 INFO    return qr code                           -> 200
+2026-07-20 15:15:02,162 WARNING apply coupon (shop)                      -> 400
+2026-07-20 15:15:02,218 INFO    change-email                             -> 200
+2026-07-20 15:15:39,176 INFO    reset-password (authed)                  -> 200
+2026-07-20 15:15:39,220 WARNING login                                    -> 401
+2026-07-20 15:15:39,353 WARNING forget-password                          -> 404
+2026-07-20 15:16:16,120 WARNING check-otp v3                             -> 500
+2026-07-20 15:16:16,163 WARNING check-otp v2                             -> 500
+2026-07-20 15:16:16,205 WARNING login                                    -> 401
+2026-07-20 15:16:16,301 INFO    login                                    -> 200
+2026-07-20 15:16:16,551 INFO    mechanic signup                          -> 200
+2026-07-20 15:16:16,627 INFO    get mechanics                            -> 200
+2026-07-20 15:16:16,707 INFO    workshop users all                       -> 200
+2026-07-20 15:16:16,778 WARNING contact_mechanic                         -> 400
+2026-07-20 15:16:16,839 WARNING receive_report                           -> 500
+2026-07-20 15:16:16,909 INFO    service_requests                         -> 200
+2026-07-20 15:16:17,077 INFO    mechanic_report                          -> 200
+2026-07-20 15:16:17,122 INFO    forget-password                          -> 200
+2026-07-20 15:16:53,984 WARNING check-otp v3                             -> 500
+2026-07-20 15:16:54,032 WARNING check-otp v2                             -> 500
+2026-07-20 15:16:54,080 INFO    forget-password                          -> 200
+2026-07-20 15:17:31,030 WARNING check-otp v3                             -> 500
+2026-07-20 15:17:31,074 WARNING check-otp v2                             -> 500
+2026-07-20 15:17:31,075 INFO    SWEEP #1 DONE: 133 calls (97 ok / 36 err)
+2026-07-20 15:17:31,075 INFO    Sleeping 784s before next sweep...

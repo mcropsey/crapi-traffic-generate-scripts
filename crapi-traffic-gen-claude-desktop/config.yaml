@@ -1,0 +1,98 @@
+# =============================================================================
+# crAPI Traffic Generator - Configuration
+# =============================================================================
+# Everything the generator needs lives here. Change hosts, volumes, and timing
+# without touching the script. See README.md for full details.
+# =============================================================================
+
+hosts:
+  # Base URL of your crAPI instance (no trailing slash).
+  crapi_base: "https://crapi.cropseyit.com"
+
+  # MailHog web/API base URL (no trailing slash). Used to read the emails crAPI
+  # sends (vehicle VIN + pincode, password-reset OTP, change-email token).
+  mailhog_base: "https://mail.cropseyit.com"
+
+# -----------------------------------------------------------------------------
+# TLS / network
+# -----------------------------------------------------------------------------
+network:
+  verify_tls: true          # set false ONLY if you use self-signed certs
+  timeout_seconds: 20        # per-request timeout
+  retries: 2                 # retry count for transient network errors
+  # Optional proxy so ALL traffic flows through your Noname/Akamai sensor or an
+  # inline collector. Leave blank to go direct. Example: "http://127.0.0.1:8080"
+  proxy: ""
+
+# -----------------------------------------------------------------------------
+# Run behavior
+# -----------------------------------------------------------------------------
+run:
+  # loop  = run forever, re-exercising every endpoint each cycle (good for
+  #         pushing "In Progress" -> "Done" over hours/days)
+  # once  = a single full sweep, then exit (good for cron / Task Scheduler)
+  # CLI flags --loop / --once override this value.
+  mode: "loop"
+
+  loop_interval_seconds: 900   # wait between full sweeps in loop mode (15 min)
+  jitter_seconds: 120          # random +/- jitter added to the interval
+  stop_after_cycles: 0         # 0 = unlimited; N = stop after N sweeps
+
+# -----------------------------------------------------------------------------
+# How much data to generate each sweep
+# -----------------------------------------------------------------------------
+volume:
+  new_users_per_cycle: 3       # fresh consumer accounts created each sweep
+  new_mechanics_per_cycle: 1   # fresh mechanic accounts each sweep
+  reuse_existing_users: true   # also log in as previously created users
+  max_reused_users: 10         # cap on how many prior users to replay
+  posts_per_user: 2            # community posts each active user creates
+  comments_per_user: 2         # comments each active user leaves
+  orders_per_user: 2           # shop orders each active user places
+  products_added_per_cycle: 1  # new shop products (admin-style) per sweep
+
+# -----------------------------------------------------------------------------
+# Static / seeded credentials
+# -----------------------------------------------------------------------------
+# crAPI ships with pre-seeded demo accounts. If your instance still has them,
+# listing them here lets the generator exercise endpoints as an established
+# user with existing vehicles/orders. Comment out if you removed the seed data.
+seed_users:
+  - email: "victim.one@example.com"
+    password: "Victim!123"
+  # - email: "adam007@example.com"
+  #   password: "Password!123"
+
+# Mechanic sign-up code. crAPI validates new mechanic registrations against a
+# configured code. The stock crAPI default is "TRAC_JHTQ". Change if your
+# deployment customized MECHANIC_CODE.
+mechanic:
+  signup_code: "TRAC_JHTQ"
+  # A mechanic that already exists (seeded). Used for contact_mechanic and
+  # receive_report flows. Stock crAPI seeds this account/code.
+  existing_code: "TRAC_JHTQ"
+  existing_api: "http://localhost:8888/workshop/api/mechanic/receive_report"
+
+# -----------------------------------------------------------------------------
+# Password used for every generated account (kept intentionally weak so the
+# "Weak Password Policy" posture finding also triggers). Change if desired.
+# -----------------------------------------------------------------------------
+generated_account_password: "Password123!"
+
+# -----------------------------------------------------------------------------
+# MailHog polling
+# -----------------------------------------------------------------------------
+mailhog:
+  enabled: true
+  poll_attempts: 12          # how many times to poll for an expected email
+  poll_interval_seconds: 3   # wait between polls
+  # MailHog search kind: "to" matches recipient. Leave as-is for crAPI.
+  search_kind: "to"
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+logging:
+  level: "INFO"              # DEBUG | INFO | WARNING | ERROR
+  log_file: "crapi_traffic.log"   # written next to the script; "" = console only
+  show_response_snippets: false    # DEBUG helper: print first 200 chars of bodies

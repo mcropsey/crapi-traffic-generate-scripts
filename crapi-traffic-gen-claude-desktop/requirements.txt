@@ -1,0 +1,4 @@
+# crAPI Traffic Generator - Python dependencies
+# Install with:  pip install -r requirements.txt
+requests>=2.31,<3.0
+PyYAML>=6.0,<7.0
