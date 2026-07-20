@@ -189,16 +189,16 @@ def one_consumer_journey(idx):
             token = r.json().get("token", "")
         except Exception:
             pass
-        auth_get(s, "/identity/api/v2/user/dashboard", token, hdrs); bump("warmup.dashboard", 1)
-        auth_get(s, "/identity/api/v2/vehicle/vehicles", token, hdrs); bump("warmup.vehicles", 1)
+        r = auth_get(s, "/identity/api/v2/user/dashboard", token, hdrs); bump("warmup.dashboard", r.status_code)
+        r = auth_get(s, "/identity/api/v2/vehicle/vehicles", token, hdrs); bump("warmup.vehicles", r.status_code)
         r = auth_get(s, "/workshop/api/shop/products", token, hdrs); bump("warmup.products", r.status_code)
-        auth_get(s, "/community/api/v2/community/posts/recent", token, hdrs); bump("warmup.posts", 1)
+        r = auth_get(s, "/community/api/v2/community/posts/recent", token, hdrs); bump("warmup.posts", r.status_code)
         if idx % 7 == 0:
             h = dict(hdrs); h["Authorization"] = f"Bearer {token}"
-            s.post(f"{BASE}/community/api/v2/community/posts",
-                   json={"title": "Trip review", "content": "Smooth drive today."},
-                   headers=h, timeout=TIMEOUT)
-            bump("warmup.create_post", 1)
+            r = s.post(f"{BASE}/community/api/v2/community/posts",
+                       json={"title": "Trip review", "content": "Smooth drive today."},
+                       headers=h, timeout=TIMEOUT)
+            bump("warmup.create_post", r.status_code)
     except requests.RequestException as e:
         bump("warmup.error", str(type(e).__name__))
     finally:
@@ -229,11 +229,11 @@ def run_authenticated(tokens, rounds):
                 if not token:
                     continue
                 hdrs = consumer_headers(1000 + idx + r_ * len(emails))
-                auth_get(s, "/identity/api/v2/user/dashboard", token, hdrs); bump("auth.dashboard", 1)
-                auth_get(s, "/identity/api/v2/vehicle/vehicles", token, hdrs); bump("auth.vehicles", 1)
-                auth_get(s, "/workshop/api/shop/products", token, hdrs); bump("auth.products", 1)
-                auth_get(s, "/community/api/v2/community/posts/recent", token, hdrs); bump("auth.posts", 1)
-                auth_get(s, "/workshop/api/shop/orders/all", token, hdrs); bump("auth.orders", 1)
+                r = auth_get(s, "/identity/api/v2/user/dashboard", token, hdrs); bump("auth.dashboard", r.status_code)
+                r = auth_get(s, "/identity/api/v2/vehicle/vehicles", token, hdrs); bump("auth.vehicles", r.status_code)
+                r = auth_get(s, "/workshop/api/shop/products", token, hdrs); bump("auth.products", r.status_code)
+                r = auth_get(s, "/community/api/v2/community/posts/recent", token, hdrs); bump("auth.posts", r.status_code)
+                r = auth_get(s, "/workshop/api/shop/orders/all", token, hdrs); bump("auth.orders", r.status_code)
     finally:
         s.close()
     print("[authenticated] complete")
@@ -286,17 +286,17 @@ def f_weak_password(s):
 
 
 def f_tech_info_exposure(s):
-    s.post(f"{BASE}/identity/api/auth/login", data="{not:json,,}",
-           headers={**consumer_headers(908), "Content-Type": "application/json"},
-           timeout=TIMEOUT)
-    bump("tech_info", 1)
-    s.post(f"{BASE}/identity/api/auth/login",
-           json={"email": {"$ne": None}, "password": ["array"]},
-           headers=consumer_headers(908), timeout=TIMEOUT)
-    bump("tech_info", 1)
-    s.get(f"{BASE}/workshop/api/shop/orders/not-an-int",
-          headers=consumer_headers(908), timeout=TIMEOUT)
-    bump("tech_info", 1)
+    r = s.post(f"{BASE}/identity/api/auth/login", data="{not:json,,}",
+               headers={**consumer_headers(908), "Content-Type": "application/json"},
+               timeout=TIMEOUT)
+    bump("tech_info", r.status_code)
+    r = s.post(f"{BASE}/identity/api/auth/login",
+               json={"email": {"$ne": None}, "password": ["array"]},
+               headers=consumer_headers(908), timeout=TIMEOUT)
+    bump("tech_info", r.status_code)
+    r = s.get(f"{BASE}/workshop/api/shop/orders/not-an-int",
+              headers=consumer_headers(908), timeout=TIMEOUT)
+    bump("tech_info", r.status_code)
 
 
 def f_excessive_single_user(s, intensity):
