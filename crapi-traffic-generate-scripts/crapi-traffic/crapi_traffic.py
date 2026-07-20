@@ -157,18 +157,25 @@ def get_user_tokens():
     tokens = {}
     s = build_session()
     for i, email in enumerate(KNOWN_USERS):
-        try:
-            r = login(s, email, KNOWN_PASSWORD, consumer_headers(1000 + i))
-            tok = ""
+        tok, last_code = "", None
+        for attempt in range(4):                 # retry transient non-200s
             try:
-                tok = r.json().get("token", "")
-            except Exception:
-                pass
-            tokens[email] = tok
-            bump("auth.login", r.status_code)
-        except requests.RequestException:
-            tokens[email] = ""
-            bump("auth.login", "err")
+                r = login(s, email, KNOWN_PASSWORD, consumer_headers(1000 + i))
+                last_code = r.status_code
+                if r.status_code == 200:
+                    try:
+                        tok = r.json().get("token", "")
+                    except Exception:
+                        tok = ""
+                    if tok:
+                        break
+            except requests.RequestException:
+                last_code = "err"
+            time.sleep(1.5)
+        tokens[email] = tok
+        bump("auth.login", last_code)
+        if not tok:
+            print(f"[auth]   ! no token for {email} (last status {last_code})")
     s.close()
     ok = sum(1 for t in tokens.values() if t)
     print(f"[auth] obtained tokens for {ok}/{len(KNOWN_USERS)} known users")
