@@ -17,14 +17,13 @@ def login(base_url: str, email: str, password: str, timeout: float = 15) -> Opti
     except:
         return None
 
-def get_user_videos(base_url: str, token: str, timeout: float = 15) -> List[Dict[str, Any]]:
+def get_dashboard(base_url: str, token: str, timeout: float = 15) -> Optional[Dict[str, Any]]:
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        r = requests.get(f"{base_url.rstrip('/')}/identity/api/v2/user/videos",
-                        headers=headers, timeout=timeout).json()
-        return r.get("videos") or []
+        return requests.get(f"{base_url.rstrip('/')}/identity/api/v2/user/dashboard",
+                           headers=headers, timeout=timeout).json()
     except:
-        return []
+        return None
 
 def delete_admin_video(base_url: str, token: str, video_id: str, timeout: float = 15) -> bool:
     headers = {"Authorization": f"Bearer {token}"}
@@ -54,10 +53,10 @@ def main():
     print("[+] Logged in")
 
     if not args.video_id:
-        videos = get_user_videos(base_url, token)
-        if not videos:
+        dashboard = get_dashboard(base_url, token)
+        if not dashboard or dashboard.get("video_id") is None:
             print("[!] No videos found"); sys.exit(1)
-        video_id = videos[0].get("id")
+        video_id = dashboard.get("video_id")
         print(f"[+] Using video ID: {video_id}")
     else:
         video_id = args.video_id

