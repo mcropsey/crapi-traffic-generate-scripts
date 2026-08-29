@@ -14,9 +14,11 @@ from typing import Optional, List, Dict, Any
 import requests
 import yaml
 
+
 def load_config(path: str) -> dict:
     with open(path, "r") as f:
         return yaml.safe_load(f)
+
 
 def login(base_url: str, email: str, password: str) -> Optional[str]:
     url = f"{base_url.rstrip('/')}/identity/api/auth/login"
@@ -25,7 +27,6 @@ def login(base_url: str, email: str, password: str) -> Optional[str]:
         r = requests.post(url, json=payload, timeout=15)
         r.raise_for_status()
         data = r.json()
-        # token is usually under "token" or "access_token"
         token = data.get("token") or data.get("access_token")
         if not token:
             print(f"  [!] Login succeeded but no token found in response: {data}")
@@ -40,6 +41,7 @@ def login(base_url: str, email: str, password: str) -> Optional[str]:
                 pass
         return None
 
+
 def get_vehicles(base_url: str, token: str) -> List[Dict[str, Any]]:
     url = f"{base_url.rstrip('/')}/identity/api/v2/vehicle/vehicles"
     headers = {"Authorization": f"Bearer {token}"}
@@ -47,7 +49,6 @@ def get_vehicles(base_url: str, token: str) -> List[Dict[str, Any]]:
         r = requests.get(url, headers=headers, timeout=15)
         r.raise_for_status()
         data = r.json()
-        # Response shape can vary slightly; handle common cases
         if isinstance(data, list):
             return data
         if isinstance(data, dict):
@@ -56,6 +57,7 @@ def get_vehicles(base_url: str, token: str) -> List[Dict[str, Any]]:
     except requests.RequestException as e:
         print(f"  [!] Failed to fetch vehicles: {e}")
         return []
+
 
 def get_location(base_url: str, token: str, vehicle_id: str) -> Optional[Dict[str, Any]]:
     url = f"{base_url.rstrip('/')}/identity/api/v2/vehicle/{vehicle_id}/location"
@@ -68,18 +70,21 @@ def get_location(base_url: str, token: str, vehicle_id: str) -> Optional[Dict[st
         print(f"  [!] Failed to fetch location for vehicle {vehicle_id}: {e}")
         return None
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Cycle through crAPI users and print their vehicle locations")
+    parser = argparse.ArgumentParser(
+        description="Cycle through crAPI users and print their vehicle locations"
+    )
     parser.add_argument(
         "--config",
         default="crapi_config.yaml",
-        help="Path to config file (default: crapi_config.yml)",
+        help="Path to config file (default: crapi_config.yaml)",
     )
     parser.add_argument(
         "--cycles",
         type=int,
-        default=10,
-        help="Number of full cycles through all users (default: 10)",
+        default=1,
+        help="Number of full cycles through all users (default: 1)",
     )
     parser.add_argument(
         "--delay",
@@ -97,7 +102,8 @@ def main():
     cfg = load_config(config_path)
 
     base_url = cfg["target"]["base_url"]
-    emails = cfg["known_users"]["emails"]
+    num_users = cfg["known_users"]["num_users"]
+    emails = [f"mike{i}@my.lab" for i in range(1, num_users + 1)]
     password = cfg["known_users"]["password"]
 
     print(f"Target : {base_url}")
@@ -110,29 +116,24 @@ def main():
         for email in emails:
             print(f"\nUser: {email}")
 
-            # 1. Login
             token = login(base_url, email, password)
             if not token:
                 print("  Skipping (login failed)")
                 continue
 
-            # 2. Get this user's vehicle(s)
             vehicles = get_vehicles(base_url, token)
             if not vehicles:
                 print("  No vehicles found for this user")
                 continue
 
-            # Take the first vehicle (most users have one)
             vehicle = vehicles[0]
             vehicle_id = vehicle.get("uuid") or vehicle.get("id") or vehicle.get("vehicleId")
             if not vehicle_id:
                 print(f"  Could not extract vehicle ID from: {vehicle}")
                 continue
 
-            # 3. Get location
             loc = get_location(base_url, token, vehicle_id)
             if loc:
-                # Pretty-print the useful bits
                 lat = lon = None
                 if "vehicleLocation" in loc:
                     vl = loc["vehicleLocation"]
@@ -149,10 +150,10 @@ def main():
             else:
                 print("  Location lookup failed")
 
-            # 4. Logout (JWT – just discard the token)
             time.sleep(args.delay)
 
     print("\nDone.")
+
 
 if __name__ == "__main__":
     main()

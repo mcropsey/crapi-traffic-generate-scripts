@@ -25,25 +25,15 @@ target:
 
 # ── known_users ─────────────────────────────────────────────────────────────
 known_users:
-  # The seeded lab accounts used for the AUTHENTICATED traffic population.
-  # The script logs each one in ONCE, caches its token, and reuses it.
-  #   Add emails    -> more distinct authenticated identities (token subjects).
-  #   Remove emails -> fewer authenticated identities.
+  # Number of test users to generate (mike1@my.lab, mike2@my.lab, etc.)
+  #   Higher -> more distinct authenticated identities (token subjects).
+  #   Lower  -> fewer authenticated identities.
   #   These same accounts are also sprayed (with a wrong password) by the
   #   "excessive credential attempts across users" pattern.
-  emails:
-    - "mike1@my.lab"
-    - "mike2@my.lab"
-    - "mike3@my.lab"
-    - "mike4@my.lab"
-    - "mike5@my.lab"
-    - "mike6@my.lab"
-    - "mike7@my.lab"
-    - "mike8@my.lab"
-    - "mike9@my.lab"
+  num_users: 50
 
-  # Shared password for ALL accounts above.
-  #   Wrong value -> every login fails; the script prints "0/9 known users"
+  # Shared password for ALL generated accounts.
+  #   Wrong value -> every login fails; the script prints "0/N known users"
   #   and the authenticated population produces no traffic. Fix it here.
   password: "Mylab123!"
 
@@ -59,7 +49,7 @@ run:
   # findings: true  -> runs all three detection populations in order:
   #                    authenticated, unauthenticated, bad-token.
   #           false -> skip the detection patterns (e.g. warmup-only runs).
-  warmup: false
+  warmup: true
   findings: true
 
 

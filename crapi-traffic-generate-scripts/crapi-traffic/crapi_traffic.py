@@ -380,7 +380,8 @@ def main():
     BASE = str(target.get("base_url", "http://192.168.1.101:8888")).rstrip("/")
 
     ku = cfg.get("known_users", {}) or {}
-    KNOWN_USERS = ku.get("emails") or [f"mike{i}@my.lab" for i in range(1, 10)]
+    num_users = ku["num_users"]
+    KNOWN_USERS = [f"mike{i}@my.lab" for i in range(1, num_users + 1)]
     KNOWN_PASSWORD = ku.get("password", "Mylab123!")
 
     http = cfg.get("http", {}) or {}

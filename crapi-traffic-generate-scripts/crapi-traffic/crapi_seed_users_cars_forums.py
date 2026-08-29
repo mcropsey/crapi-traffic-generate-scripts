@@ -62,7 +62,7 @@ def load_config(path):
 
 def build_users(emails):
     """Derive name/phone for each configured email. The numeric suffix in the
-    local part (mike1 -> 1) drives the lab name/phone; falls back to position."""
+    local part (mike1 -> 1) drives the lab name; phone is generated as 10-digit."""
     users = []
     for pos, email in enumerate(emails, start=1):
         m = re.search(r"(\d+)", email.split("@")[0])
@@ -70,7 +70,7 @@ def build_users(emails):
         users.append({
             "name": f"Mike Williams{n}",
             "email": email,
-            "phone": f"{n}{n}{n}-{n}{n}{n}-{n}{n}{n}{n}",
+            "phone": f"{pos:03d}-{pos:03d}-{pos:04d}",
         })
     return users
 
@@ -304,7 +304,8 @@ def main():
     MAILHOG_BASE = str(target.get("mailhog_base", "http://localhost:8025")).rstrip("/")
 
     ku = cfg.get("known_users", {}) or {}
-    emails   = ku.get("emails") or [f"mike{i}@my.lab" for i in range(1, 10)]
+    num_users = ku["num_users"]
+    emails = [f"mike{i}@my.lab" for i in range(1, num_users + 1)]
     PASSWORD = ku.get("password", "Mylab123!")
     users    = build_users(emails)
 
