@@ -1,0 +1,102 @@
+# ============================================================================
+# crapi_config.yaml  —  configuration for crapi_traffic.py
+# ----------------------------------------------------------------------------
+# Edit the values below, then run:   python3 crapi_traffic.py
+# (or point at a different file:     python3 crapi_traffic.py --config foo.yaml)
+#
+# Every comment below describes EXACTLY what changes when you edit that value.
+# ============================================================================
+
+
+# ── target ──────────────────────────────────────────────────────────────────
+target:
+  # The crAPI instance every request is sent to. Used by BOTH the traffic
+  # generator and the seed script.
+  #   Change this  -> all traffic/enrollment is redirected to the new host.
+  #   Must include scheme (http:// or https://). No trailing slash needed.
+  #   Examples: https://crapi.cropseyit.com   |   http://localhost:8888
+  base_url: "https://crapi.cropseyit.com"
+
+  # MailHog base URL. Used ONLY by the seed script, which reads the VIN/PIN
+  # enrollment emails crAPI sends there in order to add each user's vehicle.
+  #   Change this  -> seed script reads mail from a different MailHog instance.
+  mailhog_base: "https://mail.cropseyit.com/"
+
+
+# ── known_users ─────────────────────────────────────────────────────────────
+known_users:
+  # Number of test users to generate (mike1@my.lab, mike2@my.lab, etc.)
+  #   Higher -> more distinct authenticated identities (token subjects).
+  #   Lower  -> fewer authenticated identities.
+  #   These same accounts are also sprayed (with a wrong password) by the
+  #   "excessive credential attempts across users" pattern.
+  num_users: 50
+
+  # Shared password for ALL generated accounts.
+  #   Wrong value -> every login fails; the script prints "0/N known users"
+  #   and the authenticated population produces no traffic. Fix it here.
+  password: "Mylab123!"
+
+
+# ── run ─────────────────────────────────────────────────────────────────────
+run:
+  # Master switches for the two phases. At least one must be true.
+  #
+  # warmup:   true  -> generates many distinct-consumer journeys to push the
+  #                    API through the learning period (see the warmup block).
+  #           false -> skip it (use once learning is already complete).
+  #
+  # findings: true  -> runs all three detection populations in order:
+  #                    authenticated, unauthenticated, bad-token.
+  #           false -> skip the detection patterns (e.g. warmup-only runs).
+  warmup: true
+  findings: true
+
+
+# ── warmup ──────────────────────────────────────────────────────────────────
+# Only used when run.warmup is true.
+warmup:
+  # Number of distinct-consumer journeys (each = a fresh signup + login +
+  # normal browsing under a unique identity).
+  #   Higher -> more observed consumers, advances the learning period faster,
+  #             longer runtime, more load on the lab.
+  #   Lower  -> quicker run, fewer consumers counted.
+  #   Aim at your sensor's consumer threshold (e.g. 2000 general / 5000 auth).
+  consumers: 2500
+
+  # Concurrency for the warmup phase (parallel journeys).
+  #   Higher -> finishes faster, heavier burst load on crAPI.
+  #   Lower  -> gentler on the lab, slower to reach the consumer count.
+  threads: 16
+
+
+# ── findings ────────────────────────────────────────────────────────────────
+# Only used when run.findings is true.
+findings:
+  # How many times the known-user list is looped for AUTHENTICATED traffic.
+  #   Higher -> more authenticated requests/volume from the same accounts
+  #             (useful if auth-context detections need sustained traffic).
+  #   Lower  -> a single quick pass per user.
+  auth_rounds: 5
+
+  # Multiplier for the credential-attempt volume (single-user brute force and
+  # across-users spraying). Base is ~40 attempts each; intensity 2 = ~80, etc.
+  #   Higher -> more likely to cross "excessive credential attempts"
+  #             thresholds, more login noise.
+  #   Lower  -> fewer attempts (may fall under the detection threshold).
+  intensity: 1
+
+  # Sacrificial account for the single-user brute-force pattern. This account
+  # gets sprayed with ~40 wrong passwords each run and will be locked/throttled
+  # by crAPI, so it MUST NOT be one of known_users.emails — otherwise that real
+  # user fails to obtain a token on the next run (the 8/9 problem).
+  #   Keep it a plausible-but-unseeded address.
+  brute_target: "locked-target@my.lab"
+
+
+# ── http ────────────────────────────────────────────────────────────────────
+http:
+  # Per-request timeout in seconds.
+  #   Higher -> waits longer on a slow/unresponsive lab before giving up.
+  #   Lower  -> fails fast (good on a healthy local lab).
+  timeout: 10.0
