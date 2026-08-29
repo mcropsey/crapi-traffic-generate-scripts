@@ -42,7 +42,7 @@ def main():
     cfg = load_config(Path(args.config))
     base_url = cfg["target"]["base_url"]
     password = cfg["known_users"]["password"]
-    num_users = cfg.get("num_users", 50)
+    num_users = cfg["known_users"].get("num_users", 50)
 
     user_email = f"mike{random.randint(1, num_users)}@my.lab"
     print(f"[*] Baseline 10: Update Own Video Metadata\n[*] Target: {base_url}\n" + "-"*60)

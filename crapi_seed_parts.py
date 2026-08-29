@@ -39,7 +39,6 @@ def main():
 
     cfg = load_config(config_path)
     base_url = cfg["target"]["base_url"]
-    admin_email = "admin@example.com"
     password = cfg["known_users"]["password"]
 
     print(f"[*] Seeding car parts")
@@ -102,12 +101,7 @@ def main():
 
     print(f"[*] Attempting to create {len(parts)} parts...\n")
 
-    # Try with admin account first
-    token = login(base_url, admin_email, password)
-    if not token:
-        print("[!] Admin login failed, trying regular user")
-        token = login(base_url, "mike1@my.lab", password)
-
+    token = login(base_url, "mike1@my.lab", password)
     if not token:
         print("[!] Login failed"); sys.exit(1)
 

@@ -30,7 +30,7 @@ known_users:
   #   Lower  -> fewer authenticated identities.
   #   These same accounts are also sprayed (with a wrong password) by the
   #   "excessive credential attempts across users" pattern.
-  num_users: 50
+  num_users: 10
 
   # Shared password for ALL generated accounts.
   #   Wrong value -> every login fails; the script prints "0/N known users"

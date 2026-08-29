@@ -41,7 +41,7 @@ def main():
     cfg = load_config(config_path)
     base_url = cfg["target"]["base_url"]
     password = cfg["known_users"]["password"]
-    num_users = cfg.get("num_users", 50)
+    num_users = cfg["known_users"].get("num_users", 50)
 
     print(f"[*] Seeding videos for {num_users} users")
     print(f"[*] Target: {base_url}\n")

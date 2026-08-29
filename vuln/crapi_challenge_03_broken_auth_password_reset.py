@@ -49,7 +49,7 @@ def main():
 
     cfg = load_config(Path(args.config))
     base_url = cfg["target"]["base_url"]
-    num_users = cfg.get("num_users", 50)
+    num_users = cfg["known_users"].get("num_users", 50)
 
     print(f"[*] Challenge 3: Broken Auth - Password Reset\n[*] Target: {base_url}\n" + "-"*60)
 
